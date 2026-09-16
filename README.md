@@ -4,6 +4,16 @@
 
 Архитектура — [Feature-Sliced Design](https://feature-sliced.design/). Слой `pages` назван `views`: Next.js занимает `pages/` / `src/pages` под Pages Router.
 
+## Демо
+
+Запись экрана и скриншоты добавлены в [`demo/`](./demo/):
+
+- [Запись экрана](./demo/recording.mov)
+- [Скриншот 1](./demo/screenshot-01.png)
+- [Скриншот 2](./demo/screenshot-02.png)
+- [Скриншот 3](./demo/screenshot-03.png)
+- [Скриншот 4](./demo/screenshot-04.png)
+
 ## Запуск
 
 ```bash

@@ -15,7 +15,6 @@ import {
   restoreMenuItemLists,
   resumeMenuItem,
   stopMenuItem,
-  type MenuItemFilters,
   type StopItemPayload,
 } from '@/entities/menu-item';
 import { toast } from '@/shared/ui';
@@ -38,6 +37,7 @@ function useOptimisticStatusMutation<TVars extends { id: string }>(
   key: 'stop' | 'resume',
   mutationFn: (vars: TVars) => Promise<unknown>,
   apply: (qc: QueryClient, vars: TVars) => Promise<ListSnapshots>,
+  successMessage?: string,
 ) {
   const qc = useQueryClient();
 
@@ -45,6 +45,9 @@ function useOptimisticStatusMutation<TVars extends { id: string }>(
     mutationKey: [...statusMutationKey, key],
     mutationFn,
     onMutate: async (vars) => ({ snapshots: await apply(qc, vars) }),
+    onSuccess: () => {
+      if (successMessage) toast.success(successMessage);
+    },
     onError: (error, _vars, ctx) => {
       restoreMenuItemLists(qc, ctx?.snapshots);
       toast.error(
@@ -57,7 +60,7 @@ function useOptimisticStatusMutation<TVars extends { id: string }>(
   });
 }
 
-export function useStopMenuItem(_filters: MenuItemFilters) {
+export function useStopMenuItem() {
   return useOptimisticStatusMutation(
     'stop',
     (vars: { id: string; payload: StopItemPayload }) =>
@@ -66,10 +69,11 @@ export function useStopMenuItem(_filters: MenuItemFilters) {
   );
 }
 
-export function useResumeMenuItem(_filters: MenuItemFilters) {
+export function useResumeMenuItem() {
   return useOptimisticStatusMutation(
     'resume',
     (vars: { id: string }) => resumeMenuItem(vars.id),
     (qc, vars) => applyResumeToList(qc, vars.id),
+    'Позиция возвращена в продажу',
   );
 }

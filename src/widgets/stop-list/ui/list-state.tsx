@@ -5,7 +5,6 @@ import { type UseQueryResult } from '@tanstack/react-query';
 import {
   LOAD_ERROR_MESSAGE,
   type MenuItem,
-  type MenuItemFilters,
 } from '@/entities/menu-item';
 
 import { StateCard } from './state-card';
@@ -14,10 +13,9 @@ import { StopListTable } from './table';
 type ListStateProps = {
   query: UseQueryResult<MenuItem[]>;
   items: MenuItem[];
-  filters: MenuItemFilters;
 };
 
-export function ListState({ query, items, filters }: ListStateProps) {
+export function ListState({ query, items }: ListStateProps) {
   if (query.isLoading) {
     return <StateCard>Загружаем меню смены…</StateCard>;
   }
@@ -36,5 +34,5 @@ export function ListState({ query, items, filters }: ListStateProps) {
     return <StateCard>По выбранным фильтрам позиций нет.</StateCard>;
   }
 
-  return <StopListTable items={items} filters={filters} />;
+  return <StopListTable items={items} />;
 }

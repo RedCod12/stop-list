@@ -3,6 +3,7 @@
 import {
   Children,
   isValidElement,
+  useCallback,
   useEffect,
   useId,
   useMemo,
@@ -82,6 +83,24 @@ export function Select({
     options.find((option) => option.value === selectedValue)?.label ??
     (selectedValue || '—');
 
+  const emitChange = useCallback(
+    (next: string) => {
+      if (!isControlled) setInternalValue(next);
+      const el = selectRef.current;
+      if (el) el.value = next;
+      onChange?.({
+        target: { value: next, name },
+        currentTarget: { value: next, name },
+      } as ChangeEvent<HTMLSelectElement>);
+    },
+    [isControlled, name, onChange],
+  );
+
+  const pick = (next: string) => {
+    emitChange(next);
+    setOpen(false);
+  };
+
   useEffect(() => {
     if (!open) return;
 
@@ -91,27 +110,38 @@ export function Select({
       }
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        setOpen(false);
+        return;
+      }
+
+      const enabled = options.filter((option) => !option.disabled);
+      if (enabled.length === 0) return;
+      const currentIndex = Math.max(
+        0,
+        enabled.findIndex((option) => option.value === selectedValue),
+      );
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        emitChange(enabled[(currentIndex + 1) % enabled.length].value);
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        emitChange(
+          enabled[(currentIndex - 1 + enabled.length) % enabled.length].value,
+        );
+      }
     };
 
     document.addEventListener('mousedown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keydown', onKeyDown, true);
     return () => {
       document.removeEventListener('mousedown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keydown', onKeyDown, true);
     };
-  }, [open]);
-
-  const pick = (next: string) => {
-    if (!isControlled) setInternalValue(next);
-    const el = selectRef.current;
-    if (el) el.value = next;
-    onChange?.({
-      target: { value: next, name },
-      currentTarget: { value: next, name },
-    } as ChangeEvent<HTMLSelectElement>);
-    setOpen(false);
-  };
+  }, [open, options, selectedValue, emitChange]);
 
   return (
     <div ref={rootRef} className={cn('relative w-full', className)}>
@@ -137,10 +167,12 @@ export function Select({
 
       <button
         type="button"
+        role="combobox"
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}
+        aria-invalid={invalid || undefined}
         onBlur={() => {
           if (!onBlur || !selectRef.current) return;
           onBlur({

@@ -33,7 +33,7 @@ export function Button({
     <button
       type="button"
       className={cn(
-        'relative inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60',
+        'inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60',
         VARIANT_CLASS[variant],
         className,
       )}
@@ -41,19 +41,15 @@ export function Button({
       aria-busy={loading || undefined}
       {...props}
     >
-      <span className={cn('inline-flex items-center gap-2', loading && 'invisible')}>
-        {children}
-      </span>
       {loading ? (
-        <span className="absolute inset-0 flex items-center justify-center">
-          <span
-            className={cn(
-              'h-3.5 w-3.5 animate-spin rounded-full border-2',
-              SPINNER_CLASS[variant],
-            )}
-          />
-        </span>
+        <span
+          className={cn(
+            'h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2',
+            SPINNER_CLASS[variant],
+          )}
+        />
       ) : null}
+      {children}
     </button>
   );
 }

@@ -23,8 +23,8 @@ export function StopList({ filters }: StopListProps) {
   return (
     <>
       <MenuFilters filters={filters} />
-      <ListState query={query} items={items} filters={filters} />
-      <StopReasonPanel items={items} filters={filters} />
+      <ListState query={query} items={items} />
+      <StopReasonPanel items={items} />
       <ToastStack />
     </>
   );

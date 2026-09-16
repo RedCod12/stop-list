@@ -1,4 +1,4 @@
-export { useStopPanel, useStopPanelStore } from './panel-store';
+export { useStopPanel } from './panel-store';
 export {
   usePendingMenuItemIds,
   useResumeMenuItem,

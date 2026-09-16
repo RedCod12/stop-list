@@ -7,6 +7,7 @@ import {
 } from '@/entities/menu-item';
 import { useStopPanel } from '@/features/stop-menu-item';
 import { Badge, Button } from '@/shared/ui';
+import { AnimatePresence, motion } from 'framer-motion';
 
 type StopListRowProps = {
   item: MenuItem;
@@ -36,6 +37,7 @@ export function StopListRow({
   const { openPanel } = useStopPanel();
   const stopped = item.status.kind === 'stopped';
   const resumeBlocked = item.stock === 0;
+  const statusKey = item.status.kind;
 
   return (
     <tr className={stopped ? 'bg-paper/80 text-ink/55' : 'text-ink'}>
@@ -44,22 +46,51 @@ export function StopListRow({
       <td className="px-4 py-3">{item.stock}</td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone={stopped ? 'stop' : 'ok'}>
-            {stopped ? 'В стоп-листе' : 'В продаже'}
-          </Badge>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={statusKey}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="inline-flex"
+            >
+              <Badge tone={stopped ? 'stop' : 'ok'}>
+                {stopped ? 'В стоп-листе' : 'В продаже'}
+              </Badge>
+            </motion.span>
+          </AnimatePresence>
           {item.status.kind === 'stopped' && (
             <span className="text-xs">
               {REASON_LABELS[item.status.reason]} ·{' '}
               {formatUntil(item.status.until)}
             </span>
           )}
+          <AnimatePresence initial={false}>
+            {pending ? (
+              <motion.span
+                key="saving"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12 }}
+                className="text-xs text-ink/45"
+              >
+                сохраняется
+              </motion.span>
+            ) : null}
+          </AnimatePresence>
         </div>
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-2">
           {stopped ? (
             <>
-              <Button variant="ghost" onClick={() => openPanel(item.id)}>
+              <Button
+                variant="ghost"
+                disabled={pending}
+                onClick={() => openPanel(item)}
+              >
                 Изменить
               </Button>
               <Button
@@ -73,11 +104,17 @@ export function StopListRow({
                 }
                 onClick={onResume}
               >
-                Вернуть в продажу
+                {pending && resumePending
+                  ? 'Сохранение…'
+                  : 'Вернуть в продажу'}
               </Button>
             </>
           ) : (
-            <Button variant="danger" onClick={() => openPanel(item.id)}>
+            <Button
+              variant="danger"
+              disabled={pending}
+              onClick={() => openPanel(item)}
+            >
               В стоп-лист
             </Button>
           )}

@@ -8,17 +8,15 @@ import {
   snapUntilToStep,
   stopItemPayloadSchema,
   type MenuItem,
-  type MenuItemFilters,
   type StopReason,
 } from '@/entities/menu-item';
-import { Button, Select } from '@/shared/ui';
+import { Button, Select, toast } from '@/shared/ui';
 
 import { upcomingSlots } from '../lib';
 import { useStopMenuItem, useStopPanel } from '../model';
 
 type StopReasonFormProps = {
   selected: MenuItem;
-  filters: MenuItemFilters;
   editing: boolean;
 };
 
@@ -30,19 +28,19 @@ type FormValues = {
 
 export function StopReasonForm({
   selected,
-  filters,
   editing,
 }: StopReasonFormProps) {
   const { closePanel } = useStopPanel();
-  const stop = useStopMenuItem(filters);
+  const stop = useStopMenuItem();
   const slots = useMemo(() => upcomingSlots(), []);
+  const defaultUntil = slots[0]?.value ?? '';
 
   const form = useForm<FormValues>({
     mode: 'onBlur',
     defaultValues: {
       reason: '',
       untilMode: 'shift',
-      until: slots[0]?.value ?? '',
+      until: defaultUntil,
     },
   });
 
@@ -51,16 +49,16 @@ export function StopReasonForm({
       form.reset({
         reason: selected.status.reason,
         untilMode: selected.status.until ? 'time' : 'shift',
-        until: selected.status.until ?? slots[0]?.value ?? '',
+        until: selected.status.until ?? defaultUntil,
       });
       return;
     }
     form.reset({
       reason: '',
       untilMode: 'shift',
-      until: slots[0]?.value ?? '',
+      until: defaultUntil,
     });
-  }, [form, selected, slots]);
+  }, [defaultUntil, form, selected]);
 
   const reason = useWatch({ control: form.control, name: 'reason' });
   const untilMode = useWatch({ control: form.control, name: 'untilMode' });
@@ -87,7 +85,16 @@ export function StopReasonForm({
     }
     stop.mutate(
       { id: selected.id, payload: parsed.data },
-      { onSuccess: () => closePanel() },
+      {
+        onSuccess: () => {
+          toast.success(
+            editing
+              ? 'Стоп обновлён'
+              : 'Позиция поставлена в стоп-лист',
+          );
+          closePanel();
+        },
+      },
     );
   });
 
@@ -156,7 +163,11 @@ export function StopReasonForm({
           Отмена
         </Button>
         <Button type="submit" className="flex-1" loading={stop.isPending}>
-          {editing ? 'Сохранить' : 'Поставить в стоп'}
+          {stop.isPending
+            ? 'Сохранение…'
+            : editing
+              ? 'Сохранить'
+              : 'Поставить в стоп'}
         </Button>
       </div>
     </form>
